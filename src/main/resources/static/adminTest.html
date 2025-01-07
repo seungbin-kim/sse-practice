@@ -35,10 +35,10 @@
     //     console.log("!!! onmessage")
     //     console.dir(eventMessage)
     // }
-    eventSource.onopen = (_) => {
+    eventSource.onopen = (_) => { // 연결,재연결 완료시
         console.log("!!! on open")
     }
-    eventSource.onerror = (_) => {
+    eventSource.onerror = (_) => { // 연결이 불가하거나 서버측 timeout 으로인해 연결이 끊어졌을 때
         console.log("!!! on error")
     }
 
