@@ -21,7 +21,8 @@ class ServerSentEventController(
         const val ORDER_NOTIFICATION_TYPE = "ORDER_NOTIFICATION"
         const val ENTIRE_NOTIFICATION_TYPE = "ENTIRE_NOTIFICATION"
 
-        const val TIMEOUT_MILLIS: Long = 10 * 1000
+        const val TIMEOUT_MILLIS: Long = 30L * 1000L
+        const val RECONNECT_TIME_MILLIS: Long = 1L * 1000L
     }
 
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -34,7 +35,9 @@ class ServerSentEventController(
     ): ResponseEntity<SseEmitter> {
         logger.info("admin: {}, lastEventId: {}", admin, lastEventId)
 
-        val emitter = SseEmitter(TIMEOUT_MILLIS) // 해당 시간마다 지속적으로 재연결됨
+        val emitter = SseEmitter(TIMEOUT_MILLIS) // 해당 시간 이후 연결종료. 클라이언트에서 지속적으로 재연결
+        emitters[admin] = emitter
+
         emitter.onError {
             logger.info("onError 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
             // 재연결 대비 이벤트 저장?
@@ -46,25 +49,17 @@ class ServerSentEventController(
         }
         emitter.onCompletion {
             logger.info("onCompletion 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
-            logger.info("onCompletion - emitters: {}", emitters)
             emitters.remove(admin)
+            logger.info("onCompletion - emitters: {}", emitters)
         }
 
         // 최초 연결시 timeout 시간 안에 첫 응답을 주어야 클라이언트가 지속적으로 자동 재연결 가능
         // 응답을 한번도 안주면 503. 클라이언트가 재연결 시도하지 않음
-        emitter.send(
-            SseEmitter
-                .event()
-                .comment("hello") // 첫 응답은 데이터가 아닌 코멘트만
-                .reconnectTime(0L) // 연결이 끊겼을 때, 클라이언트가 다음 재시도까지의 대기시간
-                .build()
+        emitters.sendTo(
+            target = admin,
+            comment = "server hello",
+            reconnectTime = RECONNECT_TIME_MILLIS,
         )
-        // name을 지정하지 않은경우는 "message"
-//        emitter.send(
-//            SseEmitter
-//                .event()
-//                .data("기본이벤트")
-//        )
 
         // 마지막 수신 ID가 있다면 해당 ID+1 부터 다시 보내주어야 함.
         // 조회 및 전송은 비동기로 빼기.
@@ -72,11 +67,9 @@ class ServerSentEventController(
             // lastId 이후 이벤트들 조회, 전송
         }
 
-        emitters[admin] = emitter
         logger.info("emitters: {}", emitters)
         return ResponseEntity
             .ok()
-            .header("Keep-Alive", "timeout=${TIMEOUT_MILLIS}")
             .body(emitter)
     }
 
@@ -90,18 +83,13 @@ class ServerSentEventController(
 
         tmpSeq++
 
-        emitters[admin]?.send( // 보내다가 에러가 나는 경우도 이벤트를 저장해야 함.. onError() 에서?
-            SseEmitter
-                .event()
-                .id(tmpSeq.toString())
-                .name(ORDER_NOTIFICATION_TYPE)
-                .data("${admin}님, [${user}] 유저의 주문이 도착하였습니다.")
-                .build()
-        ) ?: run {
-            // 이벤트 Redis 저장
-        }
+        emitters.sendTo(
+            target = admin,
+            data = "${admin}님, [${user}] 유저의 주문이 도착하였습니다.",
+            eventType = ORDER_NOTIFICATION_TYPE,
+            lastEventId = tmpSeq.toString(),
+        )
     }
-
     private var tmpSeq = 0L
 
     @CrossOrigin(origins = ["*"])
@@ -109,14 +97,52 @@ class ServerSentEventController(
     fun notifyAllToAdmins() {
         logger.info("전체 알림")
 
-        emitters.forEach { (admin, emitter) ->
-            emitter.send(
-                SseEmitter
-                    .event()
-                    .name(ENTIRE_NOTIFICATION_TYPE)
-                    .data("전체 알림 [수신자: ${admin}]")
-                    .build()
-            )
-        }
+        emitters.sendToAll(
+            eventType = ENTIRE_NOTIFICATION_TYPE,
+            data = "전체 알림! 수신자: [@key]"
+        )
+    }
+
+}
+
+private fun ConcurrentHashMap<String, SseEmitter>.sendTo(
+    target: String,
+    eventType: String? = null,
+    data: String? = null,
+    comment: String? = null,
+    lastEventId: String? = null,
+    reconnectTime: Long? = null,
+) {
+    try {
+        this[target]?.send(
+            SseEmitter
+                .event()
+                .apply { eventType?.run { name(eventType) } }
+                .apply { data?.run { data(data) } }
+                .apply { comment?.run { comment(comment) } }
+                .apply { lastEventId?.run { id(lastEventId) } }
+                .apply { reconnectTime?.run { reconnectTime(reconnectTime) } }
+        )
+    } catch (e: Exception) {
+        this.remove(target)
+    }
+}
+
+private fun ConcurrentHashMap<String, SseEmitter>.sendToAll(
+    eventType: String? = null,
+    data: String? = null,
+    comment: String? = null,
+    lastEventId: String? = null,
+    reconnectTime: Long? = null,
+) {
+    this.forEach { (key, _) ->
+        sendTo(
+            target = key,
+            eventType = eventType,
+            data = data?.replace("@key", key),
+            comment = comment,
+            lastEventId = lastEventId,
+            reconnectTime = reconnectTime,
+        )
     }
 }

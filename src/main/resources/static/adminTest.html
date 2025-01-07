@@ -20,36 +20,46 @@
     adminTag.innerText = `당신의 ID는 ${id} 입니다.`
 
     // SSE 연결
-    console.log("===")
-    const eventSource = new EventSource(`http://localhost:8080/sse?admin=${id}`); // 이때 연결시도
-    console.log("***")
-
-    eventSource.addEventListener("ORDER_NOTIFICATION", (event) => {
-        console.log(`type:[${event.type}]\n 메세지: ${event.data}`)
-        console.dir(event.target.readyState)
-    })
-    eventSource.addEventListener("ENTIRE_NOTIFICATION", (event) => {
-        console.log(`type:[${event.type}]\n 메세지: ${event.data}`)
-        console.dir(event.target.readyState)
-    })
-    // 기본 이벤트 타입(message)에 대한 콜백
-    // eventSource.onmessage = (eventMessage) => {
-    //     console.log("!!! onmessage")
-    //     console.dir(eventMessage)
-    // }
-    eventSource.onopen = (_) => { // 연결,재연결 완료시
-        console.log("!!! on open")
-    }
-    eventSource.onerror = (e) => {
-        console.log(`!!! on error`)
-        // 연결이 끊어져 재연결시에도 호출됨. 단, 재연결시의 상태는 0(CONNECTING)
-        // 재연결이 불가능한 경우엔 상태가 2(CLOSED)
-        console.dir(e.target.readyState)
-    }
+    let eventSource = createEventSource();
 
     function notifyAll() {
         fetch(`http://localhost:8080/notify-all`, {
             method: "POST"
         })
+    }
+
+    function createEventSource() {
+        let eventSource = new EventSource(`http://localhost:8080/sse?admin=${id}`); // 이때 연결시도
+
+        eventSource.addEventListener("ORDER_NOTIFICATION", (event) => {
+            console.log(`type:[${event.type}]\n 메세지: ${event.data}`)
+            console.dir(event.target.readyState)
+        })
+        eventSource.addEventListener("ENTIRE_NOTIFICATION", (event) => {
+            console.log(`type:[${event.type}]\n 메세지: ${event.data}`)
+            console.dir(event.target.readyState)
+        })
+
+        // 기본 이벤트 타입(message)에 대한 콜백
+        // eventSource.onmessage = (eventMessage) => {
+        //     console.log("!!! onmessage")
+        //     console.dir(eventMessage)
+        // }
+        eventSource.onopen = (_) => { // 연결,재연결 완료시
+            console.log("!!! on open")
+        }
+        eventSource.onerror = (e) => {
+            console.log(`\n\n*** on error ***`)
+            console.dir(e.target.readyState)
+            console.log(`\n\n`)
+            // 연결이 끊어져 재연결시에도 호출됨. 단, 재연결시의 상태는 0(CONNECTING)
+            // 재연결이 불가능한 경우(상태코드 200 외)엔 상태가 2(CLOSED) => 새로운 연결 다시 생성 등 처리(new EventSource(url))
+            if (e.target.readyState === EventSource.CLOSED) {
+                // 즉시 재연결시 무한으로 연결시도함.
+                // 즉시 재연결이 아닌 충분히 긴 시간 후 연결 등 필요해보임.
+                // 어차피 응답코드가 200이 아니라면 계속 실패할 가능성이 높음
+            }
+        }
+        return eventSource;
     }
 </script>
