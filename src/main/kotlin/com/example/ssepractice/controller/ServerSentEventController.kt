@@ -54,8 +54,7 @@ class ServerSentEventController(
         emitter.send(
             SseEmitter
                 .event()
-                .name("init")
-                .data("Hello") // 최초 전송 더미데이터
+                .comment("hello") // 첫 응답은 데이터가 아닌 코멘트만
                 .reconnectTime(0L) // 연결이 끊겼을 때, 클라이언트가 다음 재시도까지의 대기시간
         )
         // name을 지정하지 않은경우는 "message"
@@ -87,7 +86,7 @@ class ServerSentEventController(
     ) {
         logger.info("[{}]from user[{}] to admin [{}]", tmpSeq, user, admin)
 
-        tmpSeq++;
+        tmpSeq++
 
         emitters[admin]?.send( // 보내다가 에러가 나는 경우도 이벤트를 저장해야 함.. onError() 에서?
             SseEmitter
