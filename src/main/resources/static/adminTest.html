@@ -26,9 +26,11 @@
 
     eventSource.addEventListener("ORDER_NOTIFICATION", (event) => {
         console.log(`type:[${event.type}]\n 메세지: ${event.data}`)
+        console.dir(event.target.readyState)
     })
     eventSource.addEventListener("ENTIRE_NOTIFICATION", (event) => {
         console.log(`type:[${event.type}]\n 메세지: ${event.data}`)
+        console.dir(event.target.readyState)
     })
     // 기본 이벤트 타입(message)에 대한 콜백
     // eventSource.onmessage = (eventMessage) => {
@@ -38,8 +40,11 @@
     eventSource.onopen = (_) => { // 연결,재연결 완료시
         console.log("!!! on open")
     }
-    eventSource.onerror = (_) => { // 연결이 불가하거나 서버측 timeout 으로인해 연결이 끊어졌을 때
-        console.log("!!! on error")
+    eventSource.onerror = (e) => {
+        console.log(`!!! on error`)
+        // 연결이 끊어져 재연결시에도 호출됨. 단, 재연결시의 상태는 0(CONNECTING)
+        // 재연결이 불가능한 경우엔 상태가 2(CLOSED)
+        console.dir(e.target.readyState)
     }
 
     function notifyAll() {
