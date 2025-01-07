@@ -40,6 +40,7 @@ class ServerSentEventController(
             // 재연결 대비 이벤트 저장?
         }
         emitter.onTimeout {
+            emitter.complete()
             logger.info("onTimeout 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
             logger.info("onTimeout - emitters: {}", emitters)
         }
@@ -56,6 +57,7 @@ class ServerSentEventController(
                 .event()
                 .comment("hello") // 첫 응답은 데이터가 아닌 코멘트만
                 .reconnectTime(0L) // 연결이 끊겼을 때, 클라이언트가 다음 재시도까지의 대기시간
+                .build()
         )
         // name을 지정하지 않은경우는 "message"
 //        emitter.send(
@@ -94,6 +96,7 @@ class ServerSentEventController(
                 .id(tmpSeq.toString())
                 .name(ORDER_NOTIFICATION_TYPE)
                 .data("${admin}님, [${user}] 유저의 주문이 도착하였습니다.")
+                .build()
         ) ?: run {
             // 이벤트 Redis 저장
         }
@@ -112,6 +115,7 @@ class ServerSentEventController(
                     .event()
                     .name(ENTIRE_NOTIFICATION_TYPE)
                     .data("전체 알림 [수신자: ${admin}]")
+                    .build()
             )
         }
     }
