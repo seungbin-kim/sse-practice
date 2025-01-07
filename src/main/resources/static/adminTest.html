@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <p id="adminId"></p>
+    <button onclick="notifyAll()">admin 전체알림</button>
+</body>
+</html>
+<script>
+    const param = new URLSearchParams(window.location.search)
+    let id = param.get("id")
+    if (id == null) {
+        // 랜덤 ID
+        id = Math.floor(Math.random() * 100)
+    }
+    const adminTag = document.getElementById("adminId")
+    adminTag.innerText = `당신의 ID는 ${id} 입니다.`
+
+    // SSE 연결
+    console.log("===")
+    const eventSource = new EventSource(`http://localhost:8080/sse?admin=${id}`); // 이때 연결시도
+    console.log("***")
+
+    eventSource.addEventListener("ORDER_NOTIFICATION", (event) => {
+        console.log(`type:[${event.type}]\n 메세지: ${event.data}`)
+    })
+    eventSource.addEventListener("ENTIRE_NOTIFICATION", (event) => {
+        console.log(`type:[${event.type}]\n 메세지: ${event.data}`)
+    })
+    // 기본 이벤트 타입(message)에 대한 콜백
+    // eventSource.onmessage = (eventMessage) => {
+    //     console.log("!!! onmessage")
+    //     console.dir(eventMessage)
+    // }
+    eventSource.onopen = (_) => {
+        console.log("!!! on open")
+    }
+    eventSource.onerror = (_) => {
+        console.log("!!! on error")
+    }
+
+    function notifyAll() {
+        fetch(`http://localhost:8080/notify-all`, {
+            method: "POST"
+        })
+    }
+</script>

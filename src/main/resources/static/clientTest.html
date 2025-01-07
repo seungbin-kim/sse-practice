@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <p id="userId"></p>
+    <label id="notify">
+        <input id="adminId" type="text" placeholder="adminId 입력">
+        <button id="button">주문</button>
+    </label>
+</body>
+</html>
+<script>
+    // 랜덤 ID
+    const id = Math.floor(Math.random() * 100)
+    const userTag = document.getElementById("userId")
+    userTag.innerText = `당신의 ID는 ${id} 입니다.`
+
+    const button = document.getElementById("button")
+    button.addEventListener("click", async _ => {
+        const adminId = document.getElementById("adminId").value
+        console.log(`adminId: [${adminId}]`)
+        if (!adminId) {
+            console.log("값이 비어있음")
+            return
+        }
+        // if (button.disabled) {
+        //     return
+        // }
+        // button.disabled = true
+        try {
+            const response = await order(adminId)
+            console.log(response)
+        } catch (e) {
+            console.error(e)
+        }
+        // button.disabled = false
+    })
+
+    async function order(target) {
+        return fetch(`http://localhost:8080/notify?admin=${target}&user=${id}`, {
+            method: "POST"
+        });
+    }
+</script>
