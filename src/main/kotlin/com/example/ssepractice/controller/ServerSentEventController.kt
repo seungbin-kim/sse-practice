@@ -40,7 +40,6 @@ class ServerSentEventController(
 
         emitter.onError {
             logger.info("onError 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
-            // 재연결 대비 이벤트 저장?
         }
         emitter.onTimeout {
             emitter.complete()
@@ -62,7 +61,7 @@ class ServerSentEventController(
         )
 
         // 마지막 수신 ID가 있다면 해당 ID+1 부터 다시 보내주어야 함.
-        // 조회 및 전송은 비동기로 빼기.
+        // 조회 및 전송은 비동기로?
         lastEventId?.let { lastId ->
             // lastId 이후 이벤트들 조회, 전송
         }
