@@ -27,7 +27,7 @@
     let eventSource = createEventSource();
 
     function notifyAll() {
-        fetch(`http://localhost:8080/notify-all`, {
+        fetch(`http://localhost:${port}/notify-all`, {
             method: "POST"
         })
     }
