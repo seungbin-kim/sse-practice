@@ -9,7 +9,7 @@ import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 
-// 이벤트 핸들러는 각 서버 인스턴스에게 메세지를 보내(redis pub) 연결된 클라이언트에게 알림을 보내도록 한다.
+// 이벤트 핸들러는 레디스에 메세지를 보내(redis pub) 각 서버 인스턴스들에 연결된 클라이언트에게 알림을 보내도록 한다.
 @Component
 class NotificationEventHandler(
     private val stringRedisTemplate: StringRedisTemplate,

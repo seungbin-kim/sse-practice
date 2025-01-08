@@ -17,7 +17,7 @@ class NotificationReceiver(
     fun handleMessage(message: String) { // 기본적으론 handleMessage 이름으로 구현해야 하지만 커스텀 가능
         logger.info("Received message: {}", message)
 
-        val event = objectMapper.readValue(message, Map::class.java)
+        val event = objectMapper.readValue(message, Map::class.java) // 수신받는 곳에서 이벤트 클래스 정의X 가정
 
         when (val type = event["type"] as String) {
             "ORDER_NOTIFICATION" -> {
