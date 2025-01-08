@@ -18,6 +18,12 @@
     const userTag = document.getElementById("userId")
     userTag.innerText = `당신의 ID는 ${id} 입니다.`
 
+    const param = new URLSearchParams(window.location.search)
+    let port = param.get("port")
+    if (port == null) {
+        port = "8080"
+    }
+
     const button = document.getElementById("button")
     button.addEventListener("click", async _ => {
         const adminId = document.getElementById("adminId").value
@@ -40,7 +46,7 @@
     })
 
     async function order(target) {
-        return fetch(`http://localhost:8080/notify?admin=${target}&user=${id}`, {
+        return fetch(`http://localhost:${port}/notify?admin=${target}&user=${id}`, {
             method: "POST"
         });
     }

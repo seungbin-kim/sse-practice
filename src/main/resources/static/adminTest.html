@@ -12,9 +12,13 @@
 <script>
     const param = new URLSearchParams(window.location.search)
     let id = param.get("id")
+    let port = param.get("port")
     if (id == null) {
         // 랜덤 ID
         id = Math.floor(Math.random() * 100)
+    }
+    if (port == null) {
+        port = "8080"
     }
     const adminTag = document.getElementById("adminId")
     adminTag.innerText = `당신의 ID는 ${id} 입니다.`
@@ -29,7 +33,7 @@
     }
 
     function createEventSource() {
-        let eventSource = new EventSource(`http://localhost:8080/sse?admin=${id}`); // 이때 연결시도
+        let eventSource = new EventSource(`http://localhost:${port}/sse?admin=${id}`); // 이때 연결시도
 
         eventSource.addEventListener("ORDER_NOTIFICATION", (event) => {
             console.log(`type:[${event.type}]\n 메세지: ${event.data}`)

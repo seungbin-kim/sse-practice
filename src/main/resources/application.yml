@@ -1,0 +1,10 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: 'sse-practice'
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
