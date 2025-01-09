@@ -36,11 +36,11 @@ class SseConnectionStore(
                 SseEmitter
                     .event()
                     .apply {
-                        eventType?.run { name(eventType) }
-                        data?.run { data(data) }
-                        comment?.run { comment(comment) }
-                        lastEventId?.run { id(lastEventId) }
-                        reconnectTime?.run { reconnectTime(reconnectTime) }
+                        eventType?.let { name(eventType) }
+                        data?.let { data(data) }
+                        comment?.let { comment(comment) }
+                        lastEventId?.let { id(lastEventId) }
+                        reconnectTime?.let { reconnectTime(reconnectTime) }
                     }
             )
         } catch (e: Exception) {
