@@ -1,8 +1,10 @@
 package com.example.ssepractice.controller
 
-import com.example.ssepractice.store.SseConnectionStore
+import com.example.ssepractice.MessagePublisher
+import com.example.ssepractice.store.SseConnectionManager
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationEventPublisher
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
@@ -15,8 +17,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 @RestController
 class ServerSentEventController(
-    private val eventPublisher: ApplicationEventPublisher,
-    private val sseConnectionStore: SseConnectionStore,
+    @Qualifier("NotificationMessagePublisher")
+    private val messagePublisher: MessagePublisher,
+    private val sseConnectionManager: SseConnectionManager,
+    private val objectMapper: ObjectMapper,
 ) {
 
     private companion object {
@@ -35,24 +39,24 @@ class ServerSentEventController(
         logger.info("admin: {}, lastEventId: {}", admin, lastEventId)
 
         val emitter = SseEmitter(TIMEOUT_MILLIS) // 해당 시간 이후 연결종료. 클라이언트에서 지속적으로 재연결
-        sseConnectionStore.storeEmitter(name = admin, emitter = emitter)
+        sseConnectionManager.addEmitter(name = admin, emitter = emitter)
 
         emitter.onError {
             logger.info("onError 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
         }
         emitter.onTimeout {
             logger.info("onTimeout 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
-            logger.info("onTimeout - emitters: {}", sseConnectionStore.emitterEntries)
+            logger.info("onTimeout - emitters: {}", sseConnectionManager.emitterEntries)
         }
         emitter.onCompletion {
             logger.info("onCompletion 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
-            sseConnectionStore.removeEmitter(name = admin)
-            logger.info("onCompletion - emitters: {}", sseConnectionStore.emitterEntries)
+            sseConnectionManager.removeEmitter(name = admin)
+            logger.info("onCompletion - emitters: {}", sseConnectionManager.emitterEntries)
         }
 
         // 최초 연결시 timeout 시간 안에 첫 응답을 주어야 클라이언트가 지속적으로 자동 재연결 가능
         // 응답을 한번도 안주면 503. 클라이언트가 재연결 시도하지 않음
-        sseConnectionStore.sendTo(
+        sseConnectionManager.sendTo(
             target = admin,
             comment = "server hello",
             reconnectTime = RECONNECT_TIME_MILLIS,
@@ -79,22 +83,31 @@ class ServerSentEventController(
 
         tmpSeq++
 
-        // 애플리케이션 이벤트를 발행한다. -> 이벤트 핸들러가 이벤트에 대한 처리(redis pub)
-        eventPublisher.publishEvent(
-            OrderEvent(
-                source = user,
-                target = admin,
-                message = "@admin님, @user 유저의 주문이 도착하였습니다.",
-                lastEventId = tmpSeq.toString(),
+        val message = objectMapper.writeValueAsString(
+            mapOf(
+                "type" to "ORDER_NOTIFICATION",
+                "source" to user,
+                "target" to admin,
+                "message" to "${admin}님, ${user} 유저의 주문이 도착하였습니다.",
+                "lastEventId" to tmpSeq.toString()
             )
         )
+        // redis pub
+        messagePublisher.publish("notification", message)
     }
+
     private var tmpSeq = 0L
 
     @CrossOrigin(origins = ["*"])
     @PostMapping("/notify-all")
     fun notifyAllToAdmins() {
-        eventPublisher.publishEvent(EntireNotificationEvent("전체 알림! 수신자: [@key]"))
+        val message = objectMapper.writeValueAsString(
+            mapOf(
+                "type" to "ENTIRE_NOTIFICATION",
+                "message" to "전체 알림! 수신자: [@key]"
+            )
+        )
+        messagePublisher.publish("notification", message)
     }
 
 }

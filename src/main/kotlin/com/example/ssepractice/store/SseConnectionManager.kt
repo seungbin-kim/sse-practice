@@ -5,14 +5,13 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
-class SseConnectionStore(
-    private val emitters: ConcurrentHashMap<String, SseEmitter> = ConcurrentHashMap(),
-) {
+class SseConnectionManager {
+    private val emitters: ConcurrentHashMap<String, SseEmitter> = ConcurrentHashMap()
 
     val emitterEntries: String
         get() = emitters.entries.joinToString("\n")
 
-    fun storeEmitter(
+    fun addEmitter(
         name: String,
         emitter: SseEmitter,
     ) {

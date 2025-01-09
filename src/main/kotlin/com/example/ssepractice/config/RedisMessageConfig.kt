@@ -29,7 +29,7 @@ class RedisMessageConfig(
                         corePoolSize = 2
                         maxPoolSize = 2
                         queueCapacity = 500
-                        setThreadNamePrefix("RedisMessageListenerContainer-")
+                        setThreadNamePrefix("msg-listener-")
                         initialize()
                     }
                 )
