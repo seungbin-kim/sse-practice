@@ -1,4 +1,4 @@
-package com.example.ssepractice
+package com.example.ssepractice.receiver
 
 import com.example.ssepractice.store.SseConnectionManager
 import com.fasterxml.jackson.databind.ObjectMapper

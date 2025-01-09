@@ -39,8 +39,6 @@ class ServerSentEventController(
         logger.info("admin: {}, lastEventId: {}", admin, lastEventId)
 
         val emitter = SseEmitter(TIMEOUT_MILLIS) // 해당 시간 이후 연결종료. 클라이언트에서 지속적으로 재연결
-        sseConnectionManager.addEmitter(name = admin, emitter = emitter)
-
         emitter.onError {
             logger.info("onError 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
         }
@@ -53,20 +51,19 @@ class ServerSentEventController(
             sseConnectionManager.removeEmitter(name = admin)
             logger.info("onCompletion - emitters: {}", sseConnectionManager.emitterEntries)
         }
+        sseConnectionManager.addEmitter(name = admin, emitter = emitter)
 
+        // 마지막 수신 ID가 있다면 해당 ID+1 부터 다시 보내주어야 함.
+        lastEventId?.let { lastId ->
+            // lastId 이후 이벤트들 조회, 전송
+        }
         // 최초 연결시 timeout 시간 안에 첫 응답을 주어야 클라이언트가 지속적으로 자동 재연결 가능
         // 응답을 한번도 안주면 503. 클라이언트가 재연결 시도하지 않음
-        sseConnectionManager.sendTo(
+        ?: sseConnectionManager.sendTo(
             target = admin,
             comment = "server hello",
             reconnectTime = RECONNECT_TIME_MILLIS,
         )
-
-        // 마지막 수신 ID가 있다면 해당 ID+1 부터 다시 보내주어야 함.
-        // 조회 및 전송은 비동기로?
-        lastEventId?.let { lastId ->
-            // lastId 이후 이벤트들 조회, 전송
-        }
 
         return ResponseEntity
             .ok()

@@ -1,5 +1,6 @@
-package com.example.ssepractice
+package com.example.ssepractice.publisher
 
+import com.example.ssepractice.MessagePublisher
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 
