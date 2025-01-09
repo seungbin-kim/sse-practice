@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile
 import redis.embedded.RedisServer
 import java.io.IOException
 
-
+// 맥에서 안됨; 보안문제?
 @Configuration
 @Profile("local")
 class EmbeddedRedisConfig(

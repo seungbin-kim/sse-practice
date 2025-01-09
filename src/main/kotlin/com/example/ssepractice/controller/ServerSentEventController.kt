@@ -41,21 +41,9 @@ class ServerSentEventController(
         logger.info("admin: {}, lastEventId: {}", admin, lastEventId)
 
         val emitter = SseEmitter(TIMEOUT_MILLIS) // 해당 시간 이후 연결종료. 클라이언트에서 지속적으로 재연결
-        emitter.onError {
-            logger.info("onError 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
-        }
-        emitter.onTimeout {
-            logger.info("onTimeout 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
-            logger.info("onTimeout - emitters: {}", sseConnectionManager.emitterEntries)
-        }
-        emitter.onCompletion {
-            logger.info("onCompletion 콜백, admin: {}, lastEventId: {}", admin, lastEventId)
-            sseConnectionManager.removeEmitter(name = admin)
-            logger.info("onCompletion - emitters: {}", sseConnectionManager.emitterEntries)
-        }
-        sseConnectionManager.addEmitter(name = admin, emitter = emitter)
+        sseConnectionManager.addEmitter(name = admin, emitter = emitter) // 연결정보를 관리
 
-        // 마지막 수신 ID가 있다면 해당 ID+1 부터 다시 보내주어야 함.
+        // 마지막 수신 ID가 있다면 해당 ID+1 부터 다시 보내주기(이거 빼고 별도 스케줄러로 다시 보내주든 해야하나?)
         lastEventId?.let { lastId ->
             // lastId 이후 이벤트들 조회, 전송
             val histories = eventHistoryService.getEventHistoriesBy(
@@ -63,7 +51,7 @@ class ServerSentEventController(
                 eventType = EventType.ORDER_NOTIFICATION,
                 lastId = lastId.toLong()
             )
-            // 0건이면 더미 보내게 해야함
+            // 0건이면 더미 보내서 연결 유지
             histories.ifEmpty { sseConnectionManager.sendToDummy(admin) }
             histories.forEach {
                 sseConnectionManager.sendTo(
