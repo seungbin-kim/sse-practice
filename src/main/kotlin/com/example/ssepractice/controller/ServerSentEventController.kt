@@ -43,7 +43,7 @@ class ServerSentEventController(
         val emitter = SseEmitter(TIMEOUT_MILLIS) // 해당 시간 이후 연결종료. 클라이언트에서 지속적으로 재연결
         sseConnectionManager.addEmitter(name = admin, emitter = emitter) // 연결정보를 관리
 
-        // 마지막 수신 ID가 있다면 해당 ID+1 부터 다시 보내주기(이거 빼고 별도 스케줄러로 다시 보내주든 해야하나?)
+        // 마지막 수신 ID가 있다면 해당 ID+1 부터 다시 보내주기 - 클라와 연결된 후 재연결이 일어났을때
         lastEventId?.let { lastId ->
             // lastId 이후 이벤트들 조회, 전송
             val histories = eventHistoryService.getEventHistoriesBy(
