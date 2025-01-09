@@ -1,4 +1,4 @@
-package com.example.ssepractice
+package com.example.ssepractice.publisher
 
 interface MessagePublisher {
 
