@@ -1,7 +1,7 @@
 package com.example.ssepractice.controller
 
-import com.example.ssepractice.publisher.MessagePublisher
-import com.example.ssepractice.store.SseConnectionManager
+import com.example.ssepractice.MessagePublisher
+import com.example.ssepractice.SseConnectionManager
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier

@@ -1,4 +1,4 @@
-package com.example.ssepractice.store
+package com.example.ssepractice
 
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter

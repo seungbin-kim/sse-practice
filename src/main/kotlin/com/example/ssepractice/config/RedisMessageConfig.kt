@@ -1,6 +1,6 @@
 package com.example.ssepractice.config
 
-import com.example.ssepractice.receiver.NotificationReceiver
+import com.example.ssepractice.NotificationReceiver
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.RedisConnectionFactory

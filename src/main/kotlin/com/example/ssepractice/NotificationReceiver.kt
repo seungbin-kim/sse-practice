@@ -1,6 +1,5 @@
-package com.example.ssepractice.receiver
+package com.example.ssepractice
 
-import com.example.ssepractice.store.SseConnectionManager
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
