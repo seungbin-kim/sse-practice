@@ -22,6 +22,16 @@ class SseConnectionManager {
         emitters.remove(name)
     }
 
+    fun sendToDummy(
+        target: String,
+    ) {
+        sendTo(
+            target = target,
+            comment = "dummy",
+            reconnectTime = 1_000L,
+        )
+    }
+
     fun sendTo(
         target: String,
         eventType: String? = null,
