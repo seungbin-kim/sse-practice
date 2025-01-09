@@ -34,6 +34,7 @@ class NotificationReceiver(
                 sseConnectionManager.sendToAll(
                     eventType = type,
                     data = event["message"] as String,
+                    lastEventId = event["lastEventId"] as String,
                 )
             }
         }

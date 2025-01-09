@@ -49,7 +49,7 @@ class ServerSentEventController(
             val histories = eventHistoryService.getEventHistoriesBy(
                 target = admin,
                 eventType = EventType.ORDER_NOTIFICATION,
-                lastId = lastId.toLong()
+                lastId = lastId.toLong(),
             )
             // 0건이면 더미 보내서 연결 유지
             histories.ifEmpty { sseConnectionManager.sendToDummy(admin) }
@@ -91,7 +91,7 @@ class ServerSentEventController(
                 "source" to user,
                 "target" to eventHistory.target,
                 "message" to eventHistory.message,
-                "lastEventId" to eventHistory.id!!.toString()
+                "lastEventId" to eventHistory.id!!.toString(),
             )
         )
         // redis pub
@@ -101,12 +101,20 @@ class ServerSentEventController(
     @CrossOrigin(origins = ["*"])
     @PostMapping("/notify-all")
     fun notifyAllToAdmins() {
+
+        val eventHistory = eventHistoryService.saveHistory(
+            eventType = EventType.ENTIRE_NOTIFICATION,
+            target = "all",
+            message = "전체 알림! 수신자: [@key]"
+        )
         val message = objectMapper.writeValueAsString(
             mapOf(
-                "type" to EventType.ENTIRE_NOTIFICATION.name,
-                "message" to "전체 알림! 수신자: [@key]"
+                "type" to eventHistory.type.name,
+                "message" to eventHistory.message,
+                "lastEventId" to eventHistory.id!!.toString(),
             )
         )
+        // redis pub
         messagePublisher.publish("notification", message)
     }
 

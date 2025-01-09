@@ -8,9 +8,9 @@ import org.springframework.context.annotation.Profile
 import redis.embedded.RedisServer
 import java.io.IOException
 
-// 맥에서 안됨; 보안문제?
+// 임베디드 레디스 맥에서 안됨... 보안문제? 윈도우는 가능
 @Configuration
-@Profile("local")
+@Profile("local-windows")
 class EmbeddedRedisConfig(
     @Value("\${spring.redis.port:6379}")
     private var redisPort: String,
